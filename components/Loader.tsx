@@ -57,6 +57,20 @@ const PAL_COLOR: string[] = Array.from({ length: 256 }, (_, idx) =>
 const palMembers: number[][] = Array.from({ length: 256 }, () => []);
 for (let i = 0; i < N; i++) if (dotLvl[i] < 98) palMembers[palIdx[i]].push(i);
 
+// Dots shrink away toward the left, right and bottom edges of the photo, so the portrait melts into
+// the background instead of ending in a hard rectangle
+const smooth01 = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+const edgeFade = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  const nx = (dotCol[i] + (dotRow[i] % 2 ? 0.5 : 0) + 0.5) / COLS;
+  const ny = (dotRow[i] * 0.866 * ASPECT) / COLS + 0.5 / COLS;
+  edgeFade[i] =
+    smooth01(0, 0.2, nx) * smooth01(0, 0.2, 1 - nx) * smooth01(0, 0.3, 1 - ny) * smooth01(0, 0.07, ny);
+}
+
 // Hex-grid neighbours become the strands of the web
 const edgeList: number[] = [];
 for (let i = 0; i < N; i++) {
@@ -72,7 +86,9 @@ for (let i = 0; i < N; i++) {
 
 // A sparse subset of strands is drawn live between the moving dots, so the web visibly knits itself together
 const dynEdges: number[] = [];
-for (let k = 0; k < edgeList.length; k += 8) dynEdges.push(edgeList[k], edgeList[k + 1]);
+for (let k = 0; k < edgeList.length; k += 8) {
+  if (Math.min(edgeFade[edgeList[k]], edgeFade[edgeList[k + 1]]) > 0.4) dynEdges.push(edgeList[k], edgeList[k + 1]);
+}
 
 // Seeded randomness: where each dot starts on the screen, when it leaves, how it curves in
 let seed = 20261120;
@@ -126,7 +142,7 @@ function layout(w: number, h: number, dpr: number): Layout {
     const r = dotRow[i];
     tx[i] = ox + ((c + (r % 2 ? 0.5 : 0) + 0.5) / COLS) * pw;
     ty[i] = oy + ((r * 0.866 * ASPECT) / COLS + 0.5 / COLS) * ph;
-    rad[i] = (0.4 + spacing * 0.47 * Math.pow(dotLvl[i] / 99, 0.85)) * (dotLvl[i] >= 98 ? 1.22 : 1); // level 98+ = teeth: overlap into a solid shape
+    rad[i] = (0.4 + spacing * 0.47 * Math.pow(dotLvl[i] / 99, 0.85)) * (dotLvl[i] >= 98 ? 1.22 : 1) * edgeFade[i]; // level 98+ = teeth: overlap into a solid shape
     sx[i] = (startX[i] * 1.1 - 0.05) * w; // scatter across the whole screen
     sy[i] = (startY[i] * 1.1 - 0.05) * h;
   }
@@ -140,7 +156,9 @@ function layout(w: number, h: number, dpr: number): Layout {
     for (let k = 0; k < edgeList.length; k += 2) {
       const a = edgeList[k];
       const b = edgeList[k + 1];
-      if ((dotLvl[a] + dotLvl[b] > 110) !== bright) continue;
+      const fade = Math.min(edgeFade[a], edgeFade[b]);
+      if (fade < 0.3) continue; // strands fade out with the dots they connect
+      if ((dotLvl[a] + dotLvl[b] > 110 && fade > 0.75) !== bright) continue;
       wg.moveTo(tx[a], ty[a]);
       wg.lineTo(tx[b], ty[b]);
     }
@@ -151,6 +169,7 @@ function layout(w: number, h: number, dpr: number): Layout {
   // settled, the pulse only has to reveal one over the other instead of redrawing 16,000 dots a frame.
   const addDot = (g: CanvasRenderingContext2D, i: number) => {
     const r = rad[i];
+    if (r < 0.25) return;
     if (r < 1.15) {
       g.rect(tx[i] - r, ty[i] - r, r * 2, r * 2);
     } else {
@@ -333,6 +352,7 @@ export default function Loader() {
           ctx.beginPath();
           for (let i = 0; i < N; i++) {
             const r = rad[i];
+            if (r < 0.25) continue;
             if (lowQuality || r < 1.15) {
               ctx.rect(xs[i] - r, ys[i] - r, r * 2, r * 2); // squares are much cheaper than arcs
             } else {
