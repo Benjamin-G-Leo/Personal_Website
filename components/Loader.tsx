@@ -31,7 +31,14 @@ const N = dotCol.length;
 const palIdx = new Uint8Array(N);
 const palSum = new Float64Array(256 * 3);
 const palCnt = new Float64Array(256);
+// Teeth (level 98+) get their own fixed colour so they never pick up a yellow cast from the photo
+const TEETH_COLOR = "rgb(232,233,238)";
+const teethDots: number[] = [];
 for (let i = 0; i < N; i++) {
+  if (dotLvl[i] >= 98) {
+    teethDots.push(i);
+    continue;
+  }
   const r = parseInt(COLORS[i * 3], 16) * 17;
   const g = parseInt(COLORS[i * 3 + 1], 16) * 17;
   const b = parseInt(COLORS[i * 3 + 2], 16) * 17;
@@ -48,7 +55,7 @@ const PAL_COLOR: string[] = Array.from({ length: 256 }, (_, idx) =>
     : "rgb(255,255,255)"
 );
 const palMembers: number[][] = Array.from({ length: 256 }, () => []);
-for (let i = 0; i < N; i++) palMembers[palIdx[i]].push(i);
+for (let i = 0; i < N; i++) if (dotLvl[i] < 98) palMembers[palIdx[i]].push(i);
 
 // Hex-grid neighbours become the strands of the web
 const edgeList: number[] = [];
@@ -168,6 +175,10 @@ function layout(w: number, h: number, dpr: number): Layout {
     for (const i of palMembers[idx]) addDot(colorG, i);
     colorG.fill();
   }
+  colorG.fillStyle = TEETH_COLOR;
+  colorG.beginPath();
+  for (const i of teethDots) addDot(colorG, i);
+  colorG.fill();
 
   return { w, h, dpr, ph, cx, cy, tx, ty, rad, sx, sy, web, white, color };
 }
