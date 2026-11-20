@@ -1,0 +1,22 @@
+{
+  "bio": "First-year Computer Science and AI Engineering undergraduate who directs and reviews AI-assisted builds of data pipelines and LLM-powered apps, then tests and debugs the results. Seeking internships and early-career opportunities in AI, data and software engineering.",
+  "education": [
+    { "school": "Amrita Vishwa Vidyapeetham", "detail": "B.Tech in Computer Science and Engineering (AI)", "years": "2026 – 2030" },
+    { "school": "Bishop Cotton Boys' School", "detail": "ICSE / ISC", "years": "2012 – 2026" }
+  ],
+  "skills": [
+    { "group": "Languages", "items": ["Java", "C (basics)", "MATLAB (basics)", "Python"] },
+    { "group": "Used in AI-assisted projects", "items": ["TypeScript", "JavaScript", "Next.js", "React", "FastAPI", "Node.js", "Streamlit", "Kafka", "Redis", "SQLite", "Docker", "Vercel", "Render", "Git"] },
+    { "group": "AI & Data", "items": ["scikit-learn", "LLM prompting", "NLP basics", "Data cleaning", "MCP servers"] }
+  ],
+  "leadership": [
+    { "role": "Executive, Microsoft Ignite Students Club (ASEB)", "when": "Sep 2026 – Present", "detail": "Planning campus technical workshops and student developer initiatives." },
+    { "role": "House Captain, Bishop Cotton Boys' School", "when": "Elected", "detail": "Led and mentored almost 800 students; welfare, morale and conflict resolution." },
+    { "role": "Event Head, Synchronise", "when": "School fest", "detail": "Ran operations, registrations and scheduling for hundreds of external participants." }
+  ],
+  "certifications": [
+    "Python for Data Science (Infosys, Oct 2026)",
+    "Introduction to Python (Infosys, Sep 2026)",
+    "Introduction to Data Science and AI (IIT Madras, Oct 2025)"
+  ]
+}

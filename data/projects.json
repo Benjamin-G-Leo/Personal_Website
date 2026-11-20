@@ -1,0 +1,89 @@
+[
+  {
+    "id": "ai-data",
+    "title": "AI & Data Systems",
+    "tagline": "Pipelines, classifiers and LLM-powered tools, directed and tested by me",
+    "projects": [
+      {
+        "name": "INDRA",
+        "description": "National Disaster Risk Analysis Platform (Smart India Hackathon team project). Cleans 5,000 raw posts to ~4,250 across English, Hindi and Hinglish, classifies 23 hazard types at 97% accuracy (99% with rules), and verifies against IMD bulletins.",
+        "skills": ["Python", "scikit-learn", "SQLite", "Next.js", "Vercel"],
+        "repo": "https://github.com/Benjamin-G-Leo/INDRA_SIH"
+      },
+      {
+        "name": "Jester",
+        "description": "Real-time fraud detection pipeline that streams simulated card purchases and flags impossible-travel, rapid-velocity and amount-spike fraud on a live map. State lives in Redis, with 115 automated tests.",
+        "skills": ["Python", "Kafka", "Redis", "Streamlit", "Docker"],
+        "repo": "https://github.com/Benjamin-G-Leo/Jester_FraudPipeline"
+      },
+      {
+        "name": "NIMBUS AEGIS ReliefMatch",
+        "description": "Flags surpluses and shortages and reroutes stock between warehouses. An LLM parses free-text donation offers, and the tools are exposed on an MCP server.",
+        "skills": ["Python", "FastAPI", "FastMCP", "LLM API", "Render"],
+        "repo": "https://github.com/Benjamin-G-Leo/NIMBUS_AEGIS_RELIEFMATCH"
+      },
+      {
+        "name": "Staff Email Automation",
+        "description": "Prototype that detects birthdays, anniversaries and service milestones and drafts personalized emails from verified data, with approval, scheduling and an audit log. 25 automated tests.",
+        "skills": ["Python", "SQLite", "Microsoft Graph", "LLM API"]
+      }
+    ]
+  },
+  {
+    "id": "web",
+    "title": "Web & Frontend",
+    "tagline": "Interfaces, experiments and tools for the browser",
+    "projects": [
+      {
+        "name": "Brandspix",
+        "description": "TypeScript web project.",
+        "skills": ["TypeScript", "Web"],
+        "repo": "https://github.com/Benjamin-G-Leo/brandspix"
+      },
+      {
+        "name": "WebOS",
+        "description": "A web operating system built with HTML, my first project of that kind.",
+        "skills": ["HTML", "CSS", "JavaScript"],
+        "repo": "https://github.com/Benjamin-G-Leo/Project_002_WebOS"
+      },
+      {
+        "name": "KanBan Sakura",
+        "description": "AI-assisted Kanban board built with Claude, and a sandbox for testing new tools.",
+        "skills": ["JavaScript", "Claude", "Experiments"],
+        "repo": "https://github.com/Benjamin-G-Leo/KanBan_Sakura"
+      }
+    ]
+  },
+  {
+    "id": "games",
+    "title": "Games",
+    "tagline": "Because fun is a valid engineering goal",
+    "projects": [
+      {
+        "name": "Volt Runner",
+        "description": "Futuristic browser arcade game where you control a glowing runner and collect energy orbs.",
+        "skills": ["TypeScript", "Game Loop", "Canvas"],
+        "repo": "https://github.com/Benjamin-G-Leo/Voltrunner"
+      }
+    ]
+  },
+  {
+    "id": "algorithms",
+    "title": "Algorithms & Optimisation",
+    "tagline": "Problem solving, from contests to resource allocation",
+    "projects": [
+      {
+        "name": "Codeforces Solutions",
+        "description": "Competitive programming problems solved for my college CP practice.",
+        "skills": ["Java", "DSA", "Problem Solving"],
+        "repo": "https://github.com/Benjamin-G-Leo/Codeforces"
+      },
+      {
+        "name": "LPP Solver",
+        "description": "Web app that solves linear programming problems with the simplex method to allocate resources efficiently.",
+        "skills": ["Simplex Method", "Optimisation", "HTML"],
+        "repo": "https://github.com/Benjamin-G-Leo/Project_001"
+      }
+    ]
+  }
+]

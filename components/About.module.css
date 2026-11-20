@@ -1,0 +1,22 @@
+.wrap { max-width: 1100px; margin: 0 auto; padding: 14vh 24px 8vh; }
+.title {
+  text-align: center; font-size: clamp(2.2rem, 7vw, 5rem); line-height: 1;
+  text-shadow: 3px 3px 0 var(--red), 6px 6px 0 var(--blue);
+}
+.bio { max-width: 720px; margin: 28px auto 56px; text-align: center; font-size: 1.1rem; line-height: 1.7; opacity: 0.88; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+.panel {
+  background: var(--paper); color: var(--ink); padding: 22px;
+  border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--blue);
+}
+.panel h3 { font-size: 1.7rem; color: var(--red); margin-bottom: 14px; }
+.item { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; font-size: 0.92rem; line-height: 1.45; }
+.item em { opacity: 0.6; font-size: 0.8rem; }
+.skills { grid-column: 1 / -1; }
+.group { margin-bottom: 14px; }
+.group p { font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+.group ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--ink); color: var(--paper); font-size: 0.78rem; padding: 4px 11px; border-radius: 999px; }
+.certs { list-style: none; display: grid; gap: 10px; font-size: 0.92rem; }
+.certs li::before { content: "★ "; color: var(--red); }
+@media (max-width: 600px) { .wrap { padding-left: 16px; padding-right: 16px; } }

@@ -1,0 +1,17 @@
+:root {
+  --red: #e62429;
+  --blue: #1b3a8c;
+  --ink: #0a0a12;
+  --paper: #f5f1e6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--ink); scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+section[id] { scroll-margin-top: 56px; }
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+.comic { font-family: var(--font-comic), Impact, sans-serif; letter-spacing: 0.04em; }

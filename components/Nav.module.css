@@ -1,0 +1,19 @@
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; transition: background 0.3s, border-color 0.3s;
+  border-bottom: 3px solid transparent;
+}
+.solid { background: rgba(10, 10, 18, 0.92); backdrop-filter: blur(6px); border-bottom-color: var(--red); }
+.logo { color: var(--paper); text-decoration: none; font-size: 1.8rem; text-shadow: 2px 2px 0 var(--red); }
+.nav ul { list-style: none; display: flex; gap: 6px; }
+.link {
+  display: block; color: var(--paper); text-decoration: none; font-size: 1.15rem;
+  padding: 4px 14px; border: 2px solid transparent; transition: background 0.2s, color 0.2s;
+}
+.link:hover { border-color: var(--paper); }
+.active { background: var(--red); border-color: var(--ink); box-shadow: 3px 3px 0 var(--blue); }
+@media (max-width: 480px) {
+  .nav { padding: 10px 14px; }
+  .link { padding: 4px 9px; font-size: 1rem; }
+}
