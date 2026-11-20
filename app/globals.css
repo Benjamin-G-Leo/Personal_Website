@@ -18,3 +18,5 @@ body {
   overflow-x: hidden;
 }
 .comic { font-family: var(--font-comic), Impact, sans-serif; letter-spacing: 0.04em; }
+
+main { position: relative; z-index: 1; }

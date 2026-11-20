@@ -1,6 +1,7 @@
 import SmoothScroll from "@/components/SmoothScroll";
 import Loader from "@/components/Loader";
 import Cursor from "@/components/Cursor";
+import Background from "@/components/Background";
 import Nav from "@/components/Nav";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
@@ -13,6 +14,7 @@ export default function Home() {
       <SmoothScroll />
       <Loader />
       <Cursor />
+      <Background />
       <Nav />
       <Hero />
       <About />

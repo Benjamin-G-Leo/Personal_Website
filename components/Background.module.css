@@ -1,0 +1,32 @@
+.bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  --glow-a: rgba(27, 58, 140, 0.55);
+  --glow-b: rgba(10, 10, 18, 0);
+}
+.glow {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 50% 28%, var(--glow-a), transparent 60%),
+    radial-gradient(circle at 50% 100%, var(--glow-b), transparent 65%);
+}
+.dots {
+  position: absolute; inset: 0; opacity: 0.9;
+  background: radial-gradient(rgba(230, 36, 41, 0.16) 1.5px, transparent 1.6px) 0 0 / 18px 18px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+}
+.lines {
+  position: absolute; inset: -20%;
+  background: repeating-linear-gradient(115deg, transparent 0 34px, rgba(245, 241, 230, 0.045) 34px 36px);
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 20%, #000 90%);
+  mask-image: radial-gradient(ellipse at center, transparent 20%, #000 90%);
+}
+.shape { position: absolute; top: 0; opacity: 0.22; line-height: 1; will-change: transform; }
+
+/* Webs hang from two opposite corners */
+.web { position: absolute; width: min(70vw, 70vh, 720px); height: auto; overflow: visible; }
+.tr { top: 0; right: 0; transform: scaleX(-1); }
+.bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.strand { fill: none; stroke: rgba(245, 241, 230, 0.28); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+
+@media (max-width: 600px) { .web { width: 90vw; } .shape { opacity: 0.15; } }

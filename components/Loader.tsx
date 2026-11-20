@@ -7,8 +7,6 @@ import styles from "./Loader.module.css";
 
 gsap.registerPlugin(useGSAP);
 
-export const LOADER_MS = 1700;
-
 export default function Loader() {
   const root = useRef<HTMLDivElement>(null);
   const [done, setDone] = useState(false);
@@ -32,13 +30,16 @@ export default function Loader() {
         const len = p.getTotalLength();
         gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
       });
+      // Pendulum starts swung far to one side, hidden until it lets go
+      gsap.set(`.${styles.pendulum}`, { rotate: 78, opacity: 0 });
 
       gsap
         .timeline({ onComplete: finish })
-        .to(rays, { strokeDashoffset: 0, duration: 0.5, stagger: 0.03, ease: "power2.out" })
-        .fromTo(`.${styles.word}`, { scale: 0, rotate: -14, opacity: 0 }, { scale: 1, rotate: -4, opacity: 1, duration: 0.45, ease: "back.out(2.4)" }, "-=0.3")
-        .to(`.${styles.word}`, { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1 }, "+=0.15")
-        .to(root.current, { yPercent: -100, duration: 0.6, ease: "power3.inOut" }, "+=0.1");
+        .to(rays, { strokeDashoffset: 0, duration: 0.4, stagger: 0.025, ease: "power2.out" })
+        .to(`.${styles.pendulum}`, { opacity: 1, duration: 0.15 }, "-=0.15")
+        // Damped swing: overshoots to the other side and settles hanging straight down
+        .to(`.${styles.pendulum}`, { rotate: 0, duration: 1.7, ease: "elastic.out(1, 0.28)" }, "<")
+        .to(root.current, { yPercent: -100, duration: 0.55, ease: "power3.inOut" }, "+=0.05");
     },
     { scope: root }
   );
@@ -56,7 +57,12 @@ export default function Loader() {
           <circle key={r} cx="0" cy="0" r={r} className={styles.ring} />
         ))}
       </svg>
-      <p className={`${styles.word} comic`}>THWIP!</p>
+      <div className={styles.pendulum}>
+        <span className={styles.thread} />
+        <p className={`${styles.name} comic`}>
+          BEN GARY <span className={styles.red}>LEO</span>
+        </p>
+      </div>
     </div>
   );
 }
