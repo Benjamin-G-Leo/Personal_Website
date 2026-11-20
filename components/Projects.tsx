@@ -115,9 +115,9 @@ export default function Projects() {
 
       const st = ScrollTrigger.create({
         trigger: root.current, start: "top 60%", end: "bottom 80%", invalidateOnRefresh: true,
-        onUpdate: (self) => setTipY(self.progress * root.current!.offsetHeight),
+        onUpdate: (self) => setTipY(self.progress * root.current!.offsetHeight - 6),
       });
-      setTipY(0);
+      setTipY(-6);
 
       let spread = 0.3;
       const flex = () => {
@@ -163,21 +163,33 @@ export default function Projects() {
     <section ref={root} className={styles.wrap} id="projects">
       <div className={styles.line} aria-hidden>
         <div className={`${styles.rope} strand-line`} />
-        <svg className={styles.tip} viewBox="-80 -4 160 100" width="160" height="100">
+        <svg className={styles.tip} viewBox="-80 -8 160 108" width="160" height="108">
           {FINGER_ANGLES.map((_, i) => {
             const L = FINGER_LEN[i];
+            const ox = (i - 2) * 2.6; // fingers leave from across the width of the line
             const bend = i % 2 ? 4 : -4;
+            // x on the finger's curve at height y (the curve's y is linear in t)
+            const xAt = (y: number) => {
+              const t = y / L;
+              const u = 1 - t;
+              return u * u * ox + 2 * u * t * (ox + bend);
+            };
+            const fork = (y: number, dx: number, dy: number) =>
+              `M${xAt(y).toFixed(1)} ${rnd(y)} l${rnd(dx)} ${rnd(dy)}`;
             return (
               <g key={i} className={styles.finger}>
-                <path className={styles.fMain} d={`M0 0 Q${bend} ${rnd(L / 2)} 0 ${L}`} />
-                <path className={styles.fFork} d={`M0 ${rnd(L * 0.5)} l${-rnd(L * 0.2)} ${rnd(L * 0.34)}`} />
-                <path className={styles.fFork} d={`M0 ${rnd(L * 0.5)} l${rnd(L * 0.2)} ${rnd(L * 0.34)}`} />
-                <path className={styles.fFork} d={`M0 ${rnd(L * 0.78)} l${-rnd(L * 0.12)} ${rnd(L * 0.2)}`} />
-                <path className={styles.fFork} d={`M0 ${rnd(L * 0.78)} l${rnd(L * 0.12)} ${rnd(L * 0.2)}`} />
-                <circle cx="0" cy={L} r="2.6" />
+                <path className={styles.fMain} d={`M${ox} -2 Q${ox + bend} ${rnd(L / 2)} 0 ${L}`} />
+                <path className={styles.fFork} d={fork(L * 0.5, -L * 0.2, L * 0.34)} />
+                <path className={styles.fFork} d={fork(L * 0.5, L * 0.2, L * 0.34)} />
+                <path className={styles.fFork} d={fork(L * 0.78, -L * 0.12, L * 0.2)} />
+                <path className={styles.fFork} d={fork(L * 0.78, L * 0.12, L * 0.2)} />
+                <circle cx="0" cy={L} r="2.4" />
               </g>
             );
           })}
+          {/* web knot that hides the cut end of the braid and gathers the fingers */}
+          <path className={styles.knot} d="M-9 -10 L9 -10 Q10 0 4 6 Q0 9 -4 6 Q-10 0 -9 -10 Z" />
+          <path className={styles.knotLine} d="M-3 -10 Q-2 -2 0 6 M3 -10 Q2 -2 0 6" />
         </svg>
       </div>
       {data.map((cat, i) => (
