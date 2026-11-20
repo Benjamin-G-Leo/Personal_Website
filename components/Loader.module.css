@@ -1,29 +1,25 @@
 .loader {
   position: fixed; inset: 0; z-index: 100; overflow: hidden;
-  background: radial-gradient(circle at 50% 55%, #1b3a8c 0%, var(--ink) 70%);
+  background: radial-gradient(circle at 50% 50%, #1b3a8c 0%, #0f1c46 45%, var(--ink) 100%);
   /* If JS never runs, don't trap the visitor behind the overlay */
-  animation: giveUp 0.3s 5s forwards;
+  animation: giveUp 0.3s 6s forwards;
 }
 @keyframes giveUp { to { opacity: 0; visibility: hidden; } }
-.web {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: min(90vw, 90vh); height: min(90vw, 90vh);
-}
-.ray { stroke: rgba(245, 241, 230, 0.3); stroke-width: 0.5; fill: none; }
-.ring { stroke: rgba(245, 241, 230, 0.18); stroke-width: 0.4; fill: none; }
 
-/* Anchored at the top-centre of the screen; rotating it swings the name like a pendulum */
-.pendulum {
-  position: absolute; top: -10px; left: 50%; width: 0; height: 52vh;
-  transform-origin: 50% 0;
-}
-.thread {
-  position: absolute; top: 0; left: -1px; width: 2px; height: 100%;
-  background: var(--paper);
-}
+/* Fills the whole screen; rays and rings extend past every edge */
+.web { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ray { stroke: rgba(245, 241, 230, 0.22); stroke-width: 0.3; fill: none; }
+.ring { stroke: rgba(245, 241, 230, 0.14); stroke-width: 0.25; fill: none; }
+
+.canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
 .name {
-  position: absolute; left: 0; bottom: 0; transform: translate(-50%, 50%);
-  white-space: nowrap; font-size: clamp(2.6rem, 12vw, 7.5rem); line-height: 1;
-  color: var(--paper); text-shadow: 4px 4px 0 var(--red), 8px 8px 0 var(--blue);
+  position: absolute; left: 50%; bottom: 5vh; translate: -50% 0; white-space: nowrap; opacity: 0;
+  font-size: clamp(2.2rem, 7vw, 4.6rem); line-height: 1; color: var(--paper);
+  text-shadow: 3px 3px 0 var(--red), 6px 6px 0 var(--blue), 0 0 24px rgba(10, 10, 18, 0.9);
 }
-.red { color: var(--red); text-shadow: 4px 4px 0 var(--blue); }
+.red { color: var(--red); text-shadow: 3px 3px 0 var(--blue), 0 0 24px rgba(10, 10, 18, 0.9); }
+.skip {
+  position: absolute; right: 18px; bottom: 14px; margin: 0; opacity: 0;
+  font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper);
+}

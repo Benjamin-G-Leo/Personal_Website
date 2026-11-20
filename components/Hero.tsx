@@ -22,7 +22,8 @@ export default function Hero() {
         gsap.set(p, { strokeDasharray: len, strokeDashoffset: reduce ? 0 : len });
       });
 
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: reduce ? 0 : 2.4 });
+      // Wait for the intro overlay to start lifting (loader:exit); the timeout is only a safety net
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" }, paused: !reduce });
       if (!reduce) {
         tl.to(lines, { strokeDashoffset: 0, duration: 1.6, stagger: 0.08 })
           .from(`.${styles.kicker}`, { y: 20, opacity: 0, duration: 0.6 }, "-=1")
@@ -44,6 +45,14 @@ export default function Hero() {
           ease: "none",
           scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true },
         });
+
+        const play = () => tl.play();
+        window.addEventListener("loader:exit", play, { once: true });
+        const safety = gsap.delayedCall(9, play);
+        return () => {
+          window.removeEventListener("loader:exit", play);
+          safety.kill();
+        };
       }
     },
     { scope: root }
