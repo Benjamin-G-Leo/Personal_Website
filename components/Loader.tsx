@@ -40,6 +40,10 @@ for (let i = 0; i < N; i++) {
   }
 }
 
+// A sparse subset of strands is drawn live between the moving dots, so the web visibly knits itself together
+const dynEdges: number[] = [];
+for (let k = 0; k < edgeList.length; k += 8) dynEdges.push(edgeList[k], edgeList[k + 1]);
+
 // Seeded randomness: where each dot starts on the screen, when it leaves, how it curves in
 let seed = 20261120;
 const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -76,7 +80,7 @@ function layout(w: number, h: number, dpr: number): Layout {
     const r = dotRow[i];
     tx[i] = ox + ((c + (r % 2 ? 0.5 : 0) + 0.5) / COLS) * pw;
     ty[i] = oy + (((r * 0.866 * ASPECT) / COLS) + 0.5 / COLS) * ph;
-    rad[i] = 0.45 + spacing * 0.5 * Math.pow(dotLvl[i] / 99, 0.85);
+    rad[i] = 0.4 + spacing * 0.47 * Math.pow(dotLvl[i] / 99, 0.85);
     sx[i] = (startX[i] * 1.1 - 0.05) * w; // scatter across the whole screen
     sy[i] = (startY[i] * 1.1 - 0.05) * h;
   }
@@ -163,6 +167,25 @@ export default function Loader() {
           for (let i = 0; i < N; i++) ctx.fillRect(xs[i] - split - rad[i], ys[i] - rad[i], rad[i] * 1.6, rad[i] * 1.6);
         }
 
+        // Live strands: only drawn once neighbouring dots are close enough, so they appear as the dots converge
+        const live = 0.26 * (1 - state.web);
+        if (g > 0.2 && live > 0.01) {
+          const maxLen = Math.max(70, w * 0.07);
+          ctx.strokeStyle = `rgba(${PAPER},${live})`;
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          for (let k = 0; k < dynEdges.length; k += 2) {
+            const a = dynEdges[k];
+            const b = dynEdges[k + 1];
+            const ddx = xs[a] - xs[b];
+            const ddy = ys[a] - ys[b];
+            if (ddx * ddx + ddy * ddy > maxLen * maxLen) continue;
+            ctx.moveTo(xs[a], ys[a]);
+            ctx.lineTo(xs[b], ys[b]);
+          }
+          ctx.stroke();
+        }
+
         if (state.web > 0) {
           ctx.globalAlpha = state.web;
           ctx.drawImage(web, 0, 0, w, h);
@@ -172,8 +195,12 @@ export default function Loader() {
         ctx.fillStyle = `rgb(${PAPER})`;
         ctx.beginPath();
         for (let i = 0; i < N; i++) {
-          ctx.moveTo(xs[i] + rad[i], ys[i]);
-          ctx.arc(xs[i], ys[i], rad[i], 0, Math.PI * 2);
+          if (rad[i] < 1.15) {
+            ctx.rect(xs[i] - rad[i], ys[i] - rad[i], rad[i] * 2, rad[i] * 2); // tiny dots: cheaper than arcs
+          } else {
+            ctx.moveTo(xs[i] + rad[i], ys[i]);
+            ctx.arc(xs[i], ys[i], rad[i], 0, Math.PI * 2);
+          }
         }
         ctx.fill();
       };
@@ -182,17 +209,20 @@ export default function Loader() {
       draw();
 
       const rays = gsap.utils.toArray<SVGPathElement>(`.${styles.ray}`);
-      rays.forEach((p) => {
+      const rings = gsap.utils.toArray<SVGCircleElement>(`.${styles.ring}`);
+      [...rays, ...rings].forEach((p) => {
         const len = p.getTotalLength();
         gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
       });
 
       const tl = gsap
         .timeline({ onUpdate: draw, onComplete: finish })
-        .to(rays, { strokeDashoffset: 0, duration: 0.6, stagger: 0.02, ease: "power2.out" }, 0)
-        .to(state, { gather: 1, duration: 2.1, ease: "power1.inOut" }, 0.2)
-        .to(state, { web: 1, duration: 1.1, ease: "power1.inOut" }, 1.6)
-        .fromTo(`.${styles.name}`, { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.8)" }, 2.2)
+        .to(state, { gather: 1, duration: 2.3, ease: "power1.inOut" }, 0.2)
+        // the big web spreads outward from the middle while the dots converge
+        .to(rays, { strokeDashoffset: 0, duration: 1.5, stagger: 0.04, ease: "power2.out" }, 0.8)
+        .to(rings, { strokeDashoffset: 0, duration: 1.2, stagger: 0.16, ease: "power1.out" }, 0.9)
+        .to(state, { web: 1, duration: 1.1, ease: "power1.inOut" }, 1.9)
+        .fromTo(`.${styles.name}`, { opacity: 0, y: 24, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.8)" }, 2.4)
         .fromTo(`.${styles.skip}`, { opacity: 0 }, { opacity: 0.6, duration: 0.5 }, 0.6)
         .call(() => window.dispatchEvent(new Event("loader:exit")), [], 3.3)
         .to(root.current, { yPercent: -100, duration: 0.65, ease: "power3.inOut" }, 3.3);

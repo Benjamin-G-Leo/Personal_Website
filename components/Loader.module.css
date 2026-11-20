@@ -8,8 +8,8 @@
 
 /* Fills the whole screen; rays and rings extend past every edge */
 .web { position: absolute; inset: 0; width: 100%; height: 100%; }
-.ray { stroke: rgba(245, 241, 230, 0.22); stroke-width: 0.3; fill: none; }
-.ring { stroke: rgba(245, 241, 230, 0.14); stroke-width: 0.25; fill: none; }
+.ray { stroke: rgba(245, 241, 230, 0.3); stroke-width: 0.32; fill: none; }
+.ring { stroke: rgba(245, 241, 230, 0.2); stroke-width: 0.28; fill: none; }
 
 .canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
