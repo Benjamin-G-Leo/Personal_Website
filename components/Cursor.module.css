@@ -1,0 +1,5 @@
+.ring, .dot { position: fixed; top: 0; left: 0; z-index: 90; pointer-events: none; opacity: 0; border-radius: 50%; }
+.ring { width: 36px; height: 36px; border: 2px solid var(--red); mix-blend-mode: normal; }
+.ring[data-hot="1"] { background: rgba(230, 36, 41, 0.18); }
+.dot { width: 7px; height: 7px; background: var(--paper); }
+@media (hover: none), (pointer: coarse) { .ring, .dot { display: none; } }

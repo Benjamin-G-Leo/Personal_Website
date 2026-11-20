@@ -22,7 +22,7 @@ export default function Hero() {
         gsap.set(p, { strokeDasharray: len, strokeDashoffset: reduce ? 0 : len });
       });
 
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: reduce ? 0 : 2.2 });
       if (!reduce) {
         tl.to(lines, { strokeDashoffset: 0, duration: 1.6, stagger: 0.08 })
           .from(`.${styles.kicker}`, { y: 20, opacity: 0, duration: 0.6 }, "-=1")

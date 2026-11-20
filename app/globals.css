@@ -6,6 +6,9 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: var(--ink); scroll-behavior: smooth; }
+html.lenis, html.lenis body { height: auto; }
+html.lenis { scroll-behavior: auto; }
+.lenis.lenis-stopped { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 section[id] { scroll-margin-top: 56px; }
 body {

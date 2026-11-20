@@ -9,6 +9,23 @@ import styles from "./Projects.module.css";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
+const BURSTS = ["POW!", "ZAP!", "THWIP!", "BAM!", "WHAM!"];
+
+function tilt(e: React.PointerEvent<HTMLElement>) {
+  if (e.pointerType !== "mouse") return;
+  const el = e.currentTarget;
+  const r = el.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width - 0.5;
+  const y = (e.clientY - r.top) / r.height - 0.5;
+  el.style.setProperty("--rx", `${(-y * 8).toFixed(2)}deg`);
+  el.style.setProperty("--ry", `${(x * 10).toFixed(2)}deg`);
+}
+
+function untilt(e: React.PointerEvent<HTMLElement>) {
+  e.currentTarget.style.setProperty("--rx", "0deg");
+  e.currentTarget.style.setProperty("--ry", "0deg");
+}
+
 export default function Projects() {
   const root = useRef<HTMLElement>(null);
 
@@ -55,9 +72,10 @@ export default function Projects() {
             <p>{cat.tagline}</p>
           </header>
           <div className={styles.grid}>
-            {cat.projects.map((p) => {
+            {cat.projects.map((p, i) => {
               const inner = (
-                <>
+                <div className={styles.inner}>
+                  <span className={`${styles.burst} comic`} aria-hidden>{BURSTS[(i + p.name.length) % BURSTS.length]}</span>
                   <h3 className="comic">{p.name}</h3>
                   <p>{p.description}</p>
                   <ul>
@@ -66,14 +84,14 @@ export default function Projects() {
                     ))}
                   </ul>
                   <span className={styles.link}>{p.repo ? "VIEW ON GITHUB →" : "PRIVATE REPO"}</span>
-                </>
+                </div>
               );
               return p.repo ? (
-                <a key={p.name} href={p.repo} target="_blank" rel="noreferrer" className={styles.card}>
+                <a key={p.name} href={p.repo} target="_blank" rel="noreferrer" className={styles.card} onPointerMove={tilt} onPointerLeave={untilt}>
                   {inner}
                 </a>
               ) : (
-                <div key={p.name} className={styles.card}>
+                <div key={p.name} className={styles.card} onPointerMove={tilt} onPointerLeave={untilt}>
                   {inner}
                 </div>
               );

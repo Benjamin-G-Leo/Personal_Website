@@ -1,0 +1,15 @@
+.loader {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  background: radial-gradient(circle, #1b3a8c 0%, var(--ink) 70%);
+  /* If JS never runs, don't trap the visitor behind the overlay */
+  animation: giveUp 0.3s 5s forwards;
+}
+@keyframes giveUp { to { opacity: 0; visibility: hidden; } }
+.web { position: absolute; width: min(90vw, 90vh); height: min(90vw, 90vh); }
+.ray { stroke: rgba(245, 241, 230, 0.5); stroke-width: 0.6; fill: none; }
+.ring { stroke: rgba(245, 241, 230, 0.25); stroke-width: 0.5; fill: none; }
+.word {
+  position: relative; font-size: clamp(4rem, 18vw, 10rem); color: var(--paper);
+  text-shadow: 5px 5px 0 var(--red), 10px 10px 0 var(--blue);
+  opacity: 0;
+}
