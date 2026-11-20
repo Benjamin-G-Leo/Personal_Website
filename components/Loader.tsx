@@ -27,7 +27,7 @@ LEVELS.forEach((lv, i) => {
 });
 const N = dotCol.length;
 
-// Photo colour per dot, grouped into a 256-colour palette so dots can be drawn in batches
+// Photo colour per dot, grouped into a 256-colour palette so the colour portrait can be drawn in batches
 const palIdx = new Uint8Array(N);
 const palSum = new Float64Array(256 * 3);
 const palCnt = new Float64Array(256);
@@ -42,15 +42,13 @@ for (let i = 0; i < N; i++) {
   palSum[idx * 3 + 2] += b;
   palCnt[idx]++;
 }
-// MIX[level][palette] = colour between white (level 0) and the true photo colour (level 3)
-const MIX: string[][] = [0, 1, 2, 3].map((lv) =>
-  Array.from({ length: 256 }, (_, idx) => {
-    if (!palCnt[idx]) return "rgb(255,255,255)";
-    const m = lv / 3;
-    const c = [0, 1, 2].map((k) => Math.round(255 + (palSum[idx * 3 + k] / palCnt[idx] - 255) * m));
-    return `rgb(${c[0]},${c[1]},${c[2]})`;
-  })
+const PAL_COLOR: string[] = Array.from({ length: 256 }, (_, idx) =>
+  palCnt[idx]
+    ? `rgb(${Math.round(palSum[idx * 3] / palCnt[idx])},${Math.round(palSum[idx * 3 + 1] / palCnt[idx])},${Math.round(palSum[idx * 3 + 2] / palCnt[idx])})`
+    : "rgb(255,255,255)"
 );
+const palMembers: number[][] = Array.from({ length: 256 }, () => []);
+for (let i = 0; i < N; i++) palMembers[palIdx[i]].push(i);
 
 // Hex-grid neighbours become the strands of the web
 const edgeList: number[] = [];
@@ -89,8 +87,18 @@ type Layout = {
   rad: Float32Array;
   sx: Float32Array;
   sy: Float32Array;
-  dist: Float32Array;
   web: HTMLCanvasElement;
+  white: HTMLCanvasElement;
+  color: HTMLCanvasElement;
+};
+
+const makeCanvas = (w: number, h: number, dpr: number) => {
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * dpr);
+  c.height = Math.round(h * dpr);
+  const g = c.getContext("2d")!;
+  g.scale(dpr, dpr);
+  return { c, g };
 };
 
 function layout(w: number, h: number, dpr: number): Layout {
@@ -106,44 +114,63 @@ function layout(w: number, h: number, dpr: number): Layout {
   const rad = new Float32Array(N);
   const sx = new Float32Array(N);
   const sy = new Float32Array(N);
-  const dist = new Float32Array(N);
   for (let i = 0; i < N; i++) {
     const c = dotCol[i];
     const r = dotRow[i];
     tx[i] = ox + ((c + (r % 2 ? 0.5 : 0) + 0.5) / COLS) * pw;
     ty[i] = oy + ((r * 0.866 * ASPECT) / COLS + 0.5 / COLS) * ph;
-    rad[i] = (0.4 + spacing * 0.47 * Math.pow(dotLvl[i] / 99, 0.85)) * (dotLvl[i] >= 98 ? 1.34 : 1); // level 98+ = teeth: overlap into a solid shape
+    rad[i] = (0.4 + spacing * 0.47 * Math.pow(dotLvl[i] / 99, 0.85)) * (dotLvl[i] >= 98 ? 1.22 : 1); // level 98+ = teeth: overlap into a solid shape
     sx[i] = (startX[i] * 1.1 - 0.05) * w; // scatter across the whole screen
     sy[i] = (startY[i] * 1.1 - 0.05) * h;
-    dist[i] = Math.hypot(tx[i] - cx, ty[i] - cy);
   }
 
-  // Pre-render the web once; it is just faded in afterwards
-  const web = document.createElement("canvas");
-  web.width = Math.round(w * dpr);
-  web.height = Math.round(h * dpr);
-  const g = web.getContext("2d")!;
-  g.scale(dpr, dpr);
-  g.lineWidth = 0.7;
+  // Pre-render the strands of the web once; it is just faded in afterwards
+  const { c: web, g: wg } = makeCanvas(w, h, dpr);
+  wg.lineWidth = 0.7;
   for (const bright of [false, true]) {
-    g.strokeStyle = `rgba(${PAPER},${bright ? 0.5 : 0.2})`;
-    g.beginPath();
+    wg.strokeStyle = `rgba(${PAPER},${bright ? 0.5 : 0.2})`;
+    wg.beginPath();
     for (let k = 0; k < edgeList.length; k += 2) {
       const a = edgeList[k];
       const b = edgeList[k + 1];
       if ((dotLvl[a] + dotLvl[b] > 110) !== bright) continue;
-      g.moveTo(tx[a], ty[a]);
-      g.lineTo(tx[b], ty[b]);
+      wg.moveTo(tx[a], ty[a]);
+      wg.lineTo(tx[b], ty[b]);
     }
-    g.stroke();
+    wg.stroke();
   }
-  return { w, h, dpr, ph, cx, cy, tx, ty, rad, sx, sy, dist, web };
-}
 
-const smoothstep = (x: number) => {
-  const t = x < 0 ? 0 : x > 1 ? 1 : x;
-  return t * t * (3 - 2 * t);
-};
+  // Pre-render the finished portrait twice (plain white, and in photo colours). Once the dots have
+  // settled, the pulse only has to reveal one over the other instead of redrawing 16,000 dots a frame.
+  const addDot = (g: CanvasRenderingContext2D, i: number) => {
+    const r = rad[i];
+    if (r < 1.15) {
+      g.rect(tx[i] - r, ty[i] - r, r * 2, r * 2);
+    } else {
+      g.moveTo(tx[i] + r, ty[i]);
+      g.arc(tx[i], ty[i], r, 0, Math.PI * 2);
+    }
+  };
+  const { c: white, g: whiteG } = makeCanvas(w, h, dpr);
+  // Teeth are one solid shape, so in plain white they would glare next to the separate dots around them
+  for (const [teeth, fill] of [[false, "#fff"], [true, "#d8d8d8"]] as const) {
+    whiteG.fillStyle = fill;
+    whiteG.beginPath();
+    for (let i = 0; i < N; i++) if ((dotLvl[i] >= 98) === teeth) addDot(whiteG, i);
+    whiteG.fill();
+  }
+
+  const { c: color, g: colorG } = makeCanvas(w, h, dpr);
+  for (let idx = 0; idx < 256; idx++) {
+    if (!palMembers[idx].length) continue;
+    colorG.fillStyle = PAL_COLOR[idx];
+    colorG.beginPath();
+    for (const i of palMembers[idx]) addDot(colorG, i);
+    colorG.fill();
+  }
+
+  return { w, h, dpr, ph, cx, cy, tx, ty, rad, sx, sy, web, white, color };
+}
 
 export default function Loader() {
   const root = useRef<HTMLDivElement>(null);
@@ -164,12 +191,12 @@ export default function Loader() {
       window.dispatchEvent(new Event("loader:start"));
 
       const canvas = root.current!.querySelector<HTMLCanvasElement>("canvas")!;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { alpha: true })!;
       const state = { gather: 0, web: 0, pulse: 0 };
       let L: Layout;
 
       const fit = () => {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = window.innerWidth;
         const h = window.innerHeight;
         canvas.width = Math.round(w * dpr);
@@ -179,21 +206,11 @@ export default function Loader() {
 
       const xs = new Float32Array(N);
       const ys = new Float32Array(N);
-      const brad = new Float32Array(N);
-      const bucket = new Uint16Array(N);
-      const order = new Uint32Array(N);
-      const counts = new Uint32Array(1024);
-      const starts = new Uint32Array(1025);
 
-      const dot = (i: number) => {
-        const r = brad[i];
-        if (r < 1.15) {
-          ctx.rect(xs[i] - r, ys[i] - r, r * 2, r * 2); // tiny dots: cheaper than arcs
-        } else {
-          ctx.moveTo(xs[i] + r, ys[i]);
-          ctx.arc(xs[i], ys[i], r, 0, Math.PI * 2);
-        }
-      };
+      // If the moving-dots phase turns out to be slow on this device, drop the costly extras
+      let lowQuality = false;
+      let cost = 0;
+      let measured = 0;
 
       // A web that grows outward with the pulse: spokes, sagging rings, and a glowing red leading edge
       const drawRipple = (cx: number, cy: number, R: number, P: number) => {
@@ -245,49 +262,53 @@ export default function Loader() {
       };
 
       const draw = () => {
-        const { w, h, dpr, ph, cx, cy, tx, ty, rad, sx, sy, dist, web } = L;
+        const { w, h, dpr, ph, cx, cy, tx, ty, rad, sx, sy, web, white, color } = L;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, w, h);
         const g = state.gather;
         const P = state.pulse;
+        const settled = g >= 1;
+        const t0 = performance.now();
 
-        for (let i = 0; i < N; i++) {
-          const p = Math.min(1, Math.max(0, (g - delay[i]) / 0.5));
-          const e = 1 - Math.pow(1 - p, 3);
-          const dx = tx[i] - sx[i];
-          const dy = ty[i] - sy[i];
-          const len = Math.hypot(dx, dy) || 1;
-          const curve = Math.sin(Math.PI * e) * swirl[i];
-          xs[i] = sx[i] + dx * e + (-dy / len) * curve;
-          ys[i] = sy[i] + dy * e + (dx / len) * curve;
-        }
-
-        // Spider-Verse style red/blue split that tightens as the portrait forms
-        const split = (1 - g) * (1 - g) * 5;
-        if (split > 0.25) {
-          ctx.fillStyle = "rgba(230,36,41,0.55)";
-          for (let i = 0; i < N; i++) ctx.fillRect(xs[i] + split - rad[i], ys[i] - rad[i], rad[i] * 1.6, rad[i] * 1.6);
-          ctx.fillStyle = "rgba(60,110,230,0.55)";
-          for (let i = 0; i < N; i++) ctx.fillRect(xs[i] - split - rad[i], ys[i] - rad[i], rad[i] * 1.6, rad[i] * 1.6);
-        }
-
-        // Live strands: only drawn once neighbouring dots are close enough, so they appear as the dots converge
-        const live = 0.26 * (1 - state.web);
-        if (g > 0.2 && live > 0.01) {
-          const maxLen = Math.max(70, w * 0.07);
-          ctx.strokeStyle = `rgba(${PAPER},${live})`;
-          ctx.lineWidth = 0.7;
-          ctx.beginPath();
-          for (let k = 0; k < dynEdges.length; k += 2) {
-            const a = dynEdges[k];
-            const b = dynEdges[k + 1];
-            const ddx = xs[a] - xs[b];
-            const ddy = ys[a] - ys[b];
-            if (ddx * ddx + ddy * ddy > maxLen * maxLen) continue;
-            ctx.moveTo(xs[a], ys[a]);
-            ctx.lineTo(xs[b], ys[b]);
+        if (!settled) {
+          for (let i = 0; i < N; i++) {
+            const p = Math.min(1, Math.max(0, (g - delay[i]) / 0.5));
+            const e = 1 - Math.pow(1 - p, 3);
+            const dx = tx[i] - sx[i];
+            const dy = ty[i] - sy[i];
+            const len = Math.hypot(dx, dy) || 1;
+            const curve = Math.sin(Math.PI * e) * swirl[i];
+            xs[i] = sx[i] + dx * e + (-dy / len) * curve;
+            ys[i] = sy[i] + dy * e + (dx / len) * curve;
           }
-          ctx.stroke();
+
+          // Spider-Verse style red/blue split that tightens as the portrait forms
+          const split = (1 - g) * (1 - g) * 5;
+          if (!lowQuality && split > 0.25) {
+            ctx.fillStyle = "rgba(230,36,41,0.55)";
+            for (let i = 0; i < N; i++) ctx.fillRect(xs[i] + split - rad[i], ys[i] - rad[i], rad[i] * 1.6, rad[i] * 1.6);
+            ctx.fillStyle = "rgba(60,110,230,0.55)";
+            for (let i = 0; i < N; i++) ctx.fillRect(xs[i] - split - rad[i], ys[i] - rad[i], rad[i] * 1.6, rad[i] * 1.6);
+          }
+
+          // Live strands: only drawn once neighbouring dots are close enough, so they appear as the dots converge
+          const live = 0.26 * (1 - state.web);
+          if (!lowQuality && g > 0.2 && live > 0.01) {
+            const maxLen = Math.max(70, w * 0.07);
+            ctx.strokeStyle = `rgba(${PAPER},${live})`;
+            ctx.lineWidth = 0.7;
+            ctx.beginPath();
+            for (let k = 0; k < dynEdges.length; k += 2) {
+              const a = dynEdges[k];
+              const b = dynEdges[k + 1];
+              const ddx = xs[a] - xs[b];
+              const ddy = ys[a] - ys[b];
+              if (ddx * ddx + ddy * ddy > maxLen * maxLen) continue;
+              ctx.moveTo(xs[a], ys[a]);
+              ctx.lineTo(xs[b], ys[b]);
+            }
+            ctx.stroke();
+          }
         }
 
         if (state.web > 0) {
@@ -296,47 +317,47 @@ export default function Loader() {
           ctx.globalAlpha = 1;
         }
 
-        if (P <= 0) {
-          // Before the pulse every dot is plain white
-          for (let i = 0; i < N; i++) brad[i] = rad[i];
+        if (!settled) {
           ctx.fillStyle = "#fff";
           ctx.beginPath();
-          for (let i = 0; i < N; i++) dot(i);
+          for (let i = 0; i < N; i++) {
+            const r = rad[i];
+            if (lowQuality || r < 1.15) {
+              ctx.rect(xs[i] - r, ys[i] - r, r * 2, r * 2); // squares are much cheaper than arcs
+            } else {
+              ctx.moveTo(xs[i] + r, ys[i]);
+              ctx.arc(xs[i], ys[i], r, 0, Math.PI * 2);
+            }
+          }
           ctx.fill();
+
+          // Watch how long this took; if it is too slow, switch to the cheaper path for the rest of the intro
+          cost = cost * 0.7 + (performance.now() - t0) * 0.3;
+          if (++measured > 6 && cost > 14) lowQuality = true;
           return;
         }
 
-        // Pulse: a ring sweeps out from the face; dots behind it turn from white to their photo colour
+        // Settled: every frame from here is a handful of image blits, however many dots there are
         const Rmax = Math.hypot(w, h) * 0.62;
         const R = P * Rmax;
-        const band = ph * 0.2;
-        drawRipple(cx, cy, R, P);
+        if (P > 0) drawRipple(cx, cy, R, P);
+        ctx.drawImage(white, 0, 0, w, h);
 
-        counts.fill(0);
-        for (let i = 0; i < N; i++) {
-          const d = dist[i];
-          const lvl = Math.round(smoothstep((R - d) / band) * 3);
-          const key = lvl === 0 ? 0 : (lvl << 8) | palIdx[i];
-          bucket[i] = key;
-          counts[key]++;
-          const x = (d - R) / (band * 0.55);
-          brad[i] = rad[i] * (1 + 0.6 * Math.exp(-x * x)); // dots swell as the wave passes
-        }
-        let acc = 0;
-        for (let k = 0; k < 1024; k++) {
-          starts[k] = acc;
-          acc += counts[k];
-        }
-        starts[1024] = acc;
-        const fill = starts.slice(0, 1024);
-        for (let i = 0; i < N; i++) order[fill[bucket[i]]++] = i;
-
-        for (let k = 0; k < 1024; k++) {
-          if (starts[k] === starts[k + 1]) continue;
-          ctx.fillStyle = k === 0 ? "#fff" : MIX[k >> 8][k & 255];
-          ctx.beginPath();
-          for (let j = starts[k]; j < starts[k + 1]; j++) dot(order[j]);
-          ctx.fill();
+        if (P > 0) {
+          // The colour portrait is revealed inside the expanding pulse, with a soft three-step edge
+          const band = ph * 0.2;
+          for (const [back, alpha] of [[0, 0.34], [band * 0.5, 0.66], [band, 1]] as const) {
+            const r = R - back;
+            if (r <= 0) continue;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(color, 0, 0, w, h);
+            ctx.restore();
+          }
+          ctx.globalAlpha = 1;
         }
       };
 

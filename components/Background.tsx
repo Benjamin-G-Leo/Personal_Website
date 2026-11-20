@@ -74,15 +74,10 @@ export default function Background() {
         .to(rayEls, { strokeDashoffset: 0, duration: 1, stagger: 0.08 }, 0)
         .to(arcEls, { strokeDashoffset: 0, duration: 1, stagger: 0.18 }, 0.5);
 
-      // 2. Parallax: halftone dots and speed lines drift at different speeds
-      gsap.to(`.${styles.dots}`, {
-        backgroundPositionY: () => -document.documentElement.scrollHeight * 0.12,
-        ease: "none", scrollTrigger: page,
-      });
-      gsap.to(`.${styles.lines}`, {
-        backgroundPositionY: () => -document.documentElement.scrollHeight * 0.3,
-        ease: "none", scrollTrigger: page,
-      });
+      // 2. Parallax: halftone dots and speed lines drift at different speeds. They move with transforms
+      // (compositor-only) and wrap by one pattern period, so nothing is repainted while scrolling.
+      const setDots = gsap.quickSetter(`.${styles.dots}`, "y", "px");
+      const setLines = gsap.quickSetter(`.${styles.lines}`, "y", "px");
 
       // Floating comic shapes wrap around the screen at their own speed
       const shapes = gsap.utils.toArray<HTMLElement>(`.${styles.shape}`);
@@ -91,6 +86,8 @@ export default function Background() {
       const update = () => {
         const h = window.innerHeight;
         const y = window.scrollY;
+        setDots(-((y * 0.12) % 18)); // dot grid repeats every 18px
+        setLines(-((y * 0.3) % 85.1)); // 115deg stripes, 36px apart, repeat every ~85px vertically
         shapes.forEach((_, i) => {
           const s = SHAPES[i];
           const span = h + 160;

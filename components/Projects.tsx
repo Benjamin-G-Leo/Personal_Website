@@ -107,20 +107,39 @@ export default function Projects() {
       const rope = root.current!.querySelector<HTMLElement>(`.${styles.rope}`)!;
       const tip = root.current!.querySelector<SVGSVGElement>(`.${styles.tip}`)!;
       const fingers = gsap.utils.toArray<SVGGElement>(`.${styles.finger}`);
+      const tail = root.current!.querySelector<HTMLElement>(`.${styles.tail}`)!;
       gsap.set(fingers, { svgOrigin: "0 0" });
-      gsap.set(tip, { opacity: 1 });
+      gsap.set([tip, tail], { opacity: 1 });
       const setTipY = gsap.quickSetter(tip, "y", "px");
+      const setTailY = gsap.quickSetter(tail, "y", "px");
 
-      gsap.fromTo(rope, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", ease: "none", scrollTrigger: { trigger: root.current, start: "top 60%", end: "bottom 80%", scrub: true } });
+      // Cache the section height; reading offsetHeight on every scroll tick can force a layout
+      let sectionH = root.current!.offsetHeight;
+      const onRefresh = () => { sectionH = root.current!.offsetHeight; };
+      ScrollTrigger.addEventListener("refresh", onRefresh);
+
+      // The braid is cut short by TAIL px; a faded copy of the same weave (the tail) carries on from there
+      // and dissolves just as the fingers fade in, so the three strands appear to unravel into the web.
+      const TAIL = 36;
+      const place = (progress: number) => {
+        const end = progress * sectionH; // where the strand has grown to
+        rope.style.clipPath = `inset(0 0 ${Math.max(0, sectionH - end + TAIL - 2)}px 0)`;
+        const tailTop = end - TAIL;
+        setTailY(tailTop);
+        tail.style.backgroundPositionY = `${-(((tailTop % 72) + 72) % 72)}px`; // continue the weave exactly
+        setTipY(end - 12);
+      };
+      place(0);
 
       const st = ScrollTrigger.create({
         trigger: root.current, start: "top 60%", end: "bottom 80%", invalidateOnRefresh: true,
-        onUpdate: (self) => setTipY(self.progress * root.current!.offsetHeight - 6),
+        onUpdate: (self) => place(self.progress),
       });
-      setTipY(-6);
 
       let spread = 0.3;
       const flex = () => {
+        // Nothing to animate while the strand is off screen
+        if (!st.isActive && Math.abs(spread - 0.3) < 0.002) return;
         const v = Math.min(Math.abs(st.getVelocity()) / 1800, 1);
         spread += (0.3 + 0.7 * v - spread) * 0.12;
         fingers.forEach((f, i) => gsap.set(f, { rotation: FINGER_ANGLES[i] * spread, scaleY: 0.82 + 0.3 * v }));
@@ -154,7 +173,10 @@ export default function Projects() {
         });
       });
 
-      return () => gsap.ticker.remove(flex);
+      return () => {
+        gsap.ticker.remove(flex);
+        ScrollTrigger.removeEventListener("refresh", onRefresh);
+      };
     },
     { scope: root }
   );
@@ -163,6 +185,7 @@ export default function Projects() {
     <section ref={root} className={styles.wrap} id="projects">
       <div className={styles.line} aria-hidden>
         <div className={`${styles.rope} strand-line`} />
+        <div className={`${styles.tail} strand-line`} />
         <svg className={styles.tip} viewBox="-80 -8 160 108" width="160" height="108">
           {FINGER_ANGLES.map((_, i) => {
             const L = FINGER_LEN[i];
@@ -187,9 +210,6 @@ export default function Projects() {
               </g>
             );
           })}
-          {/* web knot that hides the cut end of the braid and gathers the fingers */}
-          <path className={styles.knot} d="M-9 -10 L9 -10 Q10 0 4 6 Q0 9 -4 6 Q-10 0 -9 -10 Z" />
-          <path className={styles.knotLine} d="M-3 -10 Q-2 -2 0 6 M3 -10 Q2 -2 0 6" />
         </svg>
       </div>
       {data.map((cat, i) => (

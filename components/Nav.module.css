@@ -4,7 +4,7 @@
   padding: 12px 24px; transition: background 0.3s, border-color 0.3s;
   border-bottom: 3px solid transparent;
 }
-.solid { background: rgba(10, 10, 18, 0.92); backdrop-filter: blur(6px); border-bottom-color: var(--red); }
+.solid { background: rgba(10, 10, 18, 0.95); border-bottom-color: var(--red); }
 .logo { color: var(--paper); text-decoration: none; font-size: 1.8rem; text-shadow: 2px 2px 0 var(--red); }
 .nav ul { list-style: none; display: flex; gap: 6px; }
 .link {
@@ -15,6 +15,6 @@
 .active { background: var(--red); border-color: var(--ink); box-shadow: 3px 3px 0 var(--blue); }
 @media (max-width: 480px) {
   /* The hero thread passes through the middle of the bar on phones, so the bar is solid from the start */
-  .nav { padding: 10px 14px; background: rgba(10, 10, 18, 0.92); backdrop-filter: blur(6px); border-bottom-color: var(--red); }
+  .nav { padding: 10px 14px; background: rgba(10, 10, 18, 0.95); border-bottom-color: var(--red); }
   .link { padding: 4px 9px; font-size: 1rem; }
 }
