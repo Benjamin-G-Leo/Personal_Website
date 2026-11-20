@@ -11,14 +11,75 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const BURSTS = ["POW!", "ZAP!", "THWIP!", "BAM!", "WHAM!"];
 
-// Web-shooter "hand": five fingers fan out from the strand tip (angles in degrees, lengths in px)
+// Web-shooter tip: five forked "fingers" that fan open with scroll speed (angles in degrees, lengths in px)
 const FINGER_ANGLES = [-64, -32, 0, 32, 64];
-const FINGER_LEN = [54, 70, 80, 70, 54];
+const FINGER_LEN = [56, 72, 84, 72, 56];
 
-// Fan of strands that splats out behind each domain heading
-const FAN_X = [16, 98, 180, 262, 344];
-const FAN_Y = [66, 80, 88, 80, 66];
-const FAN_PATHS = FAN_X.map((x, k) => `M180 0 Q${Math.round((180 + x) / 2)} ${Math.round(FAN_Y[k] * 0.25)} ${x} ${FAN_Y[k]}`);
+type Pt = [number, number];
+const rnd = Math.round;
+
+// A realistic hanging web: curved radial spokes, sagging capture threads between them,
+// short side-branches off the spokes, and frayed anchor ends.
+function buildWeb() {
+  const O: Pt = [180, 0];
+  const n = 11;
+  const rings = [0.16, 0.27, 0.39, 0.52, 0.66, 0.8];
+  const spokes: string[] = [];
+  const arcs: string[] = [];
+  const twigs: string[] = [];
+
+  const ends: Pt[] = Array.from({ length: n }, (_, i) => {
+    const th = ((12 + (i * 156) / (n - 1)) * Math.PI) / 180;
+    return [rnd(180 + 176 * Math.cos(th)), rnd(118 * Math.sin(th))];
+  });
+  const ctrl = (e: Pt): Pt => [rnd(180 + (e[0] - 180) * 0.55), rnd(e[1] * 0.5 + 9)];
+  const at = (e: Pt, t: number): Pt => {
+    const c = ctrl(e);
+    const u = 1 - t;
+    return [u * u * O[0] + 2 * u * t * c[0] + t * t * e[0], u * u * O[1] + 2 * u * t * c[1] + t * t * e[1]];
+  };
+  const rot = (v: Pt, deg: number): Pt => {
+    const r = (deg * Math.PI) / 180;
+    return [v[0] * Math.cos(r) - v[1] * Math.sin(r), v[0] * Math.sin(r) + v[1] * Math.cos(r)];
+  };
+
+  ends.forEach((e, i) => {
+    const c = ctrl(e);
+    spokes.push(`M180 0 Q${c[0]} ${c[1]} ${e[0]} ${e[1]}`);
+    // frayed anchor end
+    const d: Pt = [e[0] - c[0], e[1] - c[1]];
+    const len = Math.hypot(d[0], d[1]) || 1;
+    for (const deg of [-24, 24]) {
+      const v = rot([(d[0] / len) * 14, (d[1] / len) * 14], deg);
+      twigs.push(`M${e[0]} ${e[1]} l${rnd(v[0])} ${rnd(v[1])}`);
+    }
+    // side-branches growing off the spokes
+    if (i > 0 && i < n - 1) {
+      for (const [t, deg, L] of [[0.46, i % 2 ? 32 : -32, 20], [0.72, i % 2 ? -28 : 28, 16]] as const) {
+        const p = at(e, t);
+        const dir: Pt = [e[0] - p[0], e[1] - p[1]];
+        const dl = Math.hypot(dir[0], dir[1]) || 1;
+        const v = rot([(dir[0] / dl) * L, (dir[1] / dl) * L], deg);
+        twigs.push(`M${rnd(p[0])} ${rnd(p[1])} l${rnd(v[0])} ${rnd(v[1])}`);
+      }
+    }
+  });
+
+  rings.forEach((t) => {
+    for (let i = 0; i < n - 1; i++) {
+      const p = at(ends[i], t);
+      const q = at(ends[i + 1], t);
+      const mid: Pt = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+      // pull each capture thread toward the hub so it sags like real silk
+      const cx = mid[0] + (O[0] - mid[0]) * 0.16;
+      const cy = mid[1] + (O[1] - mid[1]) * 0.16;
+      arcs.push(`M${rnd(p[0])} ${rnd(p[1])} Q${rnd(cx)} ${rnd(cy)} ${rnd(q[0])} ${rnd(q[1])}`);
+    }
+  });
+
+  return { spokes, arcs, twigs };
+}
+const WEB = buildWeb();
 
 function tilt(e: React.PointerEvent<HTMLElement>) {
   if (e.pointerType !== "mouse") return;
@@ -50,7 +111,7 @@ export default function Projects() {
       gsap.set(tip, { opacity: 1 });
       const setTipY = gsap.quickSetter(tip, "y", "px");
 
-      gsap.fromTo(rope, { scaleY: 0 }, { scaleY: 1, ease: "none", transformOrigin: "top", scrollTrigger: { trigger: root.current, start: "top 60%", end: "bottom 80%", scrub: true } });
+      gsap.fromTo(rope, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", ease: "none", scrollTrigger: { trigger: root.current, start: "top 60%", end: "bottom 80%", scrub: true } });
 
       const st = ScrollTrigger.create({
         trigger: root.current, start: "top 60%", end: "bottom 80%", invalidateOnRefresh: true,
@@ -66,14 +127,19 @@ export default function Projects() {
       };
       gsap.ticker.add(flex);
 
-      // Strands fan out behind each heading as it arrives
+      // The web spins itself in behind each heading: spokes first, then capture threads, then branches
       gsap.utils.toArray<SVGSVGElement>(`.${styles.fan}`).forEach((fan) => {
-        const ps = gsap.utils.toArray<SVGPathElement>("path", fan);
-        ps.forEach((pth) => {
+        const layer = (cls: string) => gsap.utils.toArray<SVGPathElement>(`.${cls}`, fan);
+        const all = [...layer(styles.fSpoke), ...layer(styles.fArc), ...layer(styles.fTwig)];
+        all.forEach((pth) => {
           const len = pth.getTotalLength();
           gsap.set(pth, { strokeDasharray: len, strokeDashoffset: len });
         });
-        gsap.to(ps, { strokeDashoffset: 0, duration: 0.7, stagger: 0.08, ease: "power2.out", scrollTrigger: { trigger: fan, start: "top 85%" } });
+        gsap
+          .timeline({ scrollTrigger: { trigger: fan, start: "top 88%" } })
+          .to(layer(styles.fSpoke), { strokeDashoffset: 0, duration: 0.6, stagger: 0.04, ease: "power2.out" })
+          .to(layer(styles.fArc), { strokeDashoffset: 0, duration: 0.45, stagger: 0.012, ease: "none" }, "-=0.25")
+          .to(layer(styles.fTwig), { strokeDashoffset: 0, duration: 0.3, stagger: 0.012, ease: "power1.out" }, "-=0.2");
       });
 
       gsap.utils.toArray<HTMLElement>(`.${styles.section}`).forEach((sec) => {
@@ -96,20 +162,30 @@ export default function Projects() {
   return (
     <section ref={root} className={styles.wrap} id="projects">
       <div className={styles.line} aria-hidden>
-        <div className={styles.rope} />
+        <div className={`${styles.rope} strand-line`} />
         <svg className={styles.tip} viewBox="-80 -4 160 100" width="160" height="100">
-          {FINGER_ANGLES.map((_, i) => (
-            <g key={i} className={styles.finger}>
-              <path d={`M0 0 Q${i % 2 ? 4 : -4} ${FINGER_LEN[i] / 2} 0 ${FINGER_LEN[i]}`} />
-              <circle cx="0" cy={FINGER_LEN[i]} r={i === 2 ? 4.5 : 3.5} />
-            </g>
-          ))}
+          {FINGER_ANGLES.map((_, i) => {
+            const L = FINGER_LEN[i];
+            const bend = i % 2 ? 4 : -4;
+            return (
+              <g key={i} className={styles.finger}>
+                <path className={styles.fMain} d={`M0 0 Q${bend} ${rnd(L / 2)} 0 ${L}`} />
+                <path className={styles.fFork} d={`M0 ${rnd(L * 0.5)} l${-rnd(L * 0.2)} ${rnd(L * 0.34)}`} />
+                <path className={styles.fFork} d={`M0 ${rnd(L * 0.5)} l${rnd(L * 0.2)} ${rnd(L * 0.34)}`} />
+                <path className={styles.fFork} d={`M0 ${rnd(L * 0.78)} l${-rnd(L * 0.12)} ${rnd(L * 0.2)}`} />
+                <path className={styles.fFork} d={`M0 ${rnd(L * 0.78)} l${rnd(L * 0.12)} ${rnd(L * 0.2)}`} />
+                <circle cx="0" cy={L} r="2.6" />
+              </g>
+            );
+          })}
         </svg>
       </div>
       {data.map((cat, i) => (
         <div key={cat.id} className={styles.section}>
-          <svg className={styles.fan} viewBox="0 0 360 90" aria-hidden>
-            {FAN_PATHS.map((d, k) => <path key={k} d={d} />)}
+          <svg className={styles.fan} viewBox="0 -4 360 132" aria-hidden>
+            {WEB.arcs.map((d, k) => <path key={`a${k}`} d={d} className={styles.fArc} />)}
+            {WEB.spokes.map((d, k) => <path key={`s${k}`} d={d} className={styles.fSpoke} />)}
+            {WEB.twigs.map((d, k) => <path key={`t${k}`} d={d} className={styles.fTwig} />)}
           </svg>
           <header className={styles.head}>
             <span className={`${styles.num} comic`}>{String(i + 1).padStart(2, "0")}</span>

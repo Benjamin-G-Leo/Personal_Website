@@ -33,7 +33,7 @@ export default function Hero() {
         // Spider dangles on a thread as you scroll
         const threadH = () => root.current!.querySelector<HTMLElement>(`.${styles.thread}`)!.offsetHeight;
         const hang = { trigger: root.current, start: "top top", end: "bottom top", scrub: true, invalidateOnRefresh: true };
-        gsap.to(`.${styles.dangle}`, { scaleY: 1.8, ease: "none", scrollTrigger: hang });
+        gsap.to(`.${styles.dangle}`, { height: () => threadH() * 1.8, ease: "none", scrollTrigger: hang });
         // The spider rides the end of the stretching thread (scaling it would distort the spider)
         gsap.to(`.${styles.spider}`, { y: () => threadH() * 0.8, ease: "none", scrollTrigger: hang });
         // Idle sway
@@ -64,7 +64,7 @@ export default function Hero() {
       </svg>
 
       <div className={styles.thread}>
-        <div className={styles.dangle} />
+        <div className={`${styles.dangle} strand-line`} />
         <div className={styles.spider}>
           <svg className={styles.sway} viewBox="0 0 64 68" width="58" height="62" aria-hidden>
             <g className={styles.legs}>
