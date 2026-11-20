@@ -31,11 +31,13 @@ export default function Hero() {
           .from(`.${styles.cue}`, { opacity: 0, duration: 0.6 });
 
         // Spider dangles on a thread as you scroll
-        gsap.to(`.${styles.dangle}`, {
-          scaleY: 1.8,
-          ease: "none",
-          scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true },
-        });
+        const threadH = () => root.current!.querySelector<HTMLElement>(`.${styles.thread}`)!.offsetHeight;
+        const hang = { trigger: root.current, start: "top top", end: "bottom top", scrub: true, invalidateOnRefresh: true };
+        gsap.to(`.${styles.dangle}`, { scaleY: 1.8, ease: "none", scrollTrigger: hang });
+        // The spider rides the end of the stretching thread (scaling it would distort the spider)
+        gsap.to(`.${styles.spider}`, { y: () => threadH() * 0.8, ease: "none", scrollTrigger: hang });
+        // Idle sway
+        gsap.fromTo(`.${styles.sway}`, { rotate: -5 }, { rotate: 5, duration: 1.8, ease: "sine.inOut", yoyo: true, repeat: -1, transformOrigin: "50% 0" });
         gsap.to(`.${styles.content}`, {
           y: -80,
           opacity: 0,
@@ -63,6 +65,25 @@ export default function Hero() {
 
       <div className={styles.thread}>
         <div className={styles.dangle} />
+        <div className={styles.spider}>
+          <svg className={styles.sway} viewBox="0 0 64 68" width="58" height="62" aria-hidden>
+            <g className={styles.legs}>
+              <path d="M27 29 L13 15 L5 22" />
+              <path d="M26 33 L9 29 L3 40" />
+              <path d="M26 38 L9 42 L6 55" />
+              <path d="M28 43 L16 54 L15 65" />
+              <path d="M37 29 L51 15 L59 22" />
+              <path d="M38 33 L55 29 L61 40" />
+              <path d="M38 38 L55 42 L58 55" />
+              <path d="M36 43 L48 54 L49 65" />
+            </g>
+            <ellipse cx="32" cy="43" rx="11" ry="14" className={styles.abdomen} />
+            <path d="M28 36 L36 36 L33 43 L36 50 L28 50 L31 43 Z" className={styles.mark} />
+            <circle cx="32" cy="24" r="7" className={styles.abdomen} />
+            <circle cx="29.5" cy="23" r="1.8" className={styles.eye} />
+            <circle cx="34.5" cy="23" r="1.8" className={styles.eye} />
+          </svg>
+        </div>
       </div>
 
       <div className={styles.content}>
