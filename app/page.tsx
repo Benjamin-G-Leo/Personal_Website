@@ -3,7 +3,6 @@ import Loader from "@/components/Loader";
 import Cursor from "@/components/Cursor";
 import Background from "@/components/Background";
 import Nav from "@/components/Nav";
-import Strand from "@/components/Strand";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Projects from "@/components/Projects";
@@ -17,7 +16,6 @@ export default function Home() {
       <Cursor />
       <Background />
       <Nav />
-      <Strand />
       <Hero />
       <About />
       <Projects />
