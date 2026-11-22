@@ -71,11 +71,12 @@ export default function Nav() {
       <ul className={styles.bar}>
         {items.map((i) => (
           <li key={i.id} className={`${styles.item} ${open === i.id ? styles.open : ""}`}>
-            <a href={`#${i.id}`} className={`${styles.link} comic ${active === i.id ? styles.active : ""}`}>
-              {i.label}
-            </a>
-            {i.menu && (
-              <>
+            {/* One box around the label and its arrow, so the red highlight and hover outline wrap both */}
+            <div className={`${styles.trigger} ${i.menu ? styles.hasMenu : ""} ${active === i.id ? styles.active : ""}`}>
+              <a href={`#${i.id}`} className={`${styles.link} comic`}>
+                {i.label}
+              </a>
+              {i.menu && (
                 <button
                   type="button"
                   className={styles.caret}
@@ -86,6 +87,10 @@ export default function Nav() {
                 >
                   ▾
                 </button>
+              )}
+            </div>
+            {i.menu && (
+              <>
                 <div className={`${styles.menu} ${styles[i.align ?? "right"]}`}>
                   <ul className={styles.card}>
                     {i.menu.map((m) => (
