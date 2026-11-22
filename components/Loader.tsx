@@ -67,8 +67,9 @@ const edgeFade = new Float32Array(N);
 for (let i = 0; i < N; i++) {
   const nx = (dotCol[i] + (dotRow[i] % 2 ? 0.5 : 0) + 0.5) / COLS;
   const ny = (dotRow[i] * 0.866 * ASPECT) / COLS + 0.5 / COLS;
-  edgeFade[i] =
-    smooth01(0, 0.2, nx) * smooth01(0, 0.2, 1 - nx) * smooth01(0, 0.3, 1 - ny) * smooth01(0, 0.07, ny);
+  // The right-hand fade only starts below the head (ny > ~0.4), otherwise it would eat the hair at the top right
+  const rightFade = 1 - smooth01(0.36, 0.5, ny) * (1 - smooth01(0, 0.2, 1 - nx));
+  edgeFade[i] = smooth01(0, 0.2, nx) * rightFade * smooth01(0, 0.3, 1 - ny) * smooth01(0, 0.025, ny);
 }
 
 // Hex-grid neighbours become the strands of the web

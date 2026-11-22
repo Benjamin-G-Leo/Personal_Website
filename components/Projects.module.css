@@ -1,21 +1,4 @@
 .wrap { position: relative; padding: 12vh 24px 16vh; max-width: 1100px; margin: 0 auto; }
-/* Central strand: three braided silk threads (texture comes from .strand-line in globals.css) */
-.line { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; z-index: 0; }
-.rope { position: absolute; top: 0; bottom: 0; left: -11px; }
-.tail {
-  position: absolute; top: 0; left: -11px; height: 44px; opacity: 0; pointer-events: none;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
-}
-.tip {
-  position: absolute; top: 0; left: -80px; overflow: visible; opacity: 0; pointer-events: none;
-  /* the fingers fade in over the last of the braid, so the strands seem to unravel into them */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 5px, #000 24px);
-  mask-image: linear-gradient(to bottom, transparent 0, transparent 5px, #000 24px);
-}
-.fMain { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
-.fFork { fill: none; stroke: #e3e9f7; stroke-width: 1.4; stroke-linecap: round; }
-.finger circle { fill: #fff; }
 .fan {
   position: absolute; top: -70px; left: 50%; transform: translateX(-50%);
   width: min(380px, 94vw); height: auto; overflow: visible; z-index: 0; pointer-events: none;
@@ -65,4 +48,3 @@
 @media (hover: none) { .burst { display: none; } }
 @media (prefers-reduced-motion: reduce) { .inner, .burst { transition: none; } }
 
-@media (max-width: 600px) { .tip { transform-origin: top center; scale: 0.7; } }

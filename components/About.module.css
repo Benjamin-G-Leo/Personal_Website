@@ -1,9 +1,13 @@
-.wrap { max-width: 1100px; margin: 0 auto; padding: 14vh 24px 8vh; }
+.wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 14vh 24px 8vh; }
 .title {
   text-align: center; font-size: clamp(2.2rem, 7vw, 5rem); line-height: 1;
+  width: fit-content; margin: 0 auto; padding: 6px 22px; background: var(--ink); /* hides the central line behind the heading */
   text-shadow: 3px 3px 0 var(--red), 6px 6px 0 var(--blue);
 }
-.bio { max-width: 720px; margin: 28px auto 56px; text-align: center; font-size: 1.1rem; line-height: 1.7; opacity: 0.88; }
+.bio {
+  max-width: 720px; margin: 28px auto 56px; text-align: center; font-size: 1.1rem; line-height: 1.7;
+  color: rgba(245, 241, 230, 0.88); background: var(--ink); box-shadow: 0 0 22px 16px var(--ink); /* hides the central line behind the text */
+}
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
 .panel {
   background: var(--paper); color: var(--ink); padding: 22px;
