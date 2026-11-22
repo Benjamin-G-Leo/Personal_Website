@@ -213,7 +213,7 @@ export default function Projects() {
         </svg>
       </div>
       {data.map((cat, i) => (
-        <div key={cat.id} className={styles.section}>
+        <div key={cat.id} id={`projects-${cat.id}`} className={styles.section}>
           <svg className={styles.fan} viewBox="0 -4 360 132" aria-hidden>
             {WEB.arcs.map((d, k) => <path key={`a${k}`} d={d} className={styles.fArc} />)}
             {WEB.spokes.map((d, k) => <path key={`s${k}`} d={d} className={styles.fSpoke} />)}

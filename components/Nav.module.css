@@ -6,15 +6,52 @@
 }
 .solid { background: rgba(10, 10, 18, 0.95); border-bottom-color: var(--red); }
 .logo { color: var(--paper); text-decoration: none; font-size: 1.8rem; text-shadow: 2px 2px 0 var(--red); }
-.nav ul { list-style: none; display: flex; gap: 6px; }
+.bar { list-style: none; display: flex; gap: 6px; }
+.item { position: relative; display: flex; align-items: center; }
 .link {
   display: block; color: var(--paper); text-decoration: none; font-size: 1.15rem;
   padding: 4px 14px; border: 2px solid transparent; transition: background 0.2s, color 0.2s;
 }
 .link:hover { border-color: var(--paper); }
 .active { background: var(--red); border-color: var(--ink); box-shadow: 3px 3px 0 var(--blue); }
+
+/* A small arrow next to Projects and Contact: opens the menu on touch screens and from the keyboard */
+.caret {
+  margin-left: -8px; padding: 6px 8px; background: none; border: 0; cursor: pointer;
+  color: var(--paper); font-size: 0.8rem; line-height: 1; transition: transform 0.2s;
+}
+.open .caret { transform: rotate(180deg); color: var(--red); }
+
+/* The menu: the padding-top bridges the gap to the link so hovering across it doesn't close it */
+.menu {
+  position: absolute; top: 100%; padding-top: 10px; z-index: 60;
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+}
+.center { left: 50%; translate: -50% 0; }
+.right { right: 0; }
+.left { left: 0; }
+.open .menu { opacity: 1; visibility: visible; transform: none; }
+@media (hover: hover) {
+  .item:hover .menu { opacity: 1; visibility: visible; transform: none; }
+  .item:hover .caret { color: var(--red); }
+}
+.card {
+  list-style: none; min-width: 220px; padding: 6px;
+  background: var(--paper); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--red);
+}
+.card a {
+  display: block; padding: 9px 14px; color: var(--ink); text-decoration: none;
+  font-size: 1.1rem; letter-spacing: 0.03em; white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.card a:hover, .card a:focus-visible { background: var(--red); color: var(--paper); outline: none; }
+
 @media (max-width: 480px) {
   /* The hero thread passes through the middle of the bar on phones, so the bar is solid from the start */
   .nav { padding: 10px 14px; background: rgba(10, 10, 18, 0.95); border-bottom-color: var(--red); }
-  .link { padding: 4px 9px; font-size: 1rem; }
+  .bar { gap: 2px; }
+  .link { padding: 4px 7px; font-size: 1rem; }
+  .caret { margin-left: -6px; padding: 6px 5px; }
+  .card { min-width: 200px; }
 }
